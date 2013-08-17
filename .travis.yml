@@ -1,3 +1,8 @@
 language: go
 
-script: go test -v
+install:
+  - go get -v github.com/stretchr/testify/assert
+
+go:
+  - 1.0
+  - 1.1
