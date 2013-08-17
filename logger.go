@@ -55,7 +55,6 @@ func (self *Logger) Stop() {
 
 func (self *Logger) Inspect(i interface{}) {
 	self.Debugf("%+v", i)
-	return
 }
 
 func (l *Logger) Debugf(format string, n ...interface{}) {
