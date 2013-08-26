@@ -3,6 +3,7 @@ package gologger
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"time"
 )
 
@@ -37,6 +38,7 @@ type Logger struct {
 	Started  time.Time
 	Prefix   string
 	Colored  bool
+	Caller   bool
 }
 
 func New() *Logger {
@@ -73,12 +75,6 @@ func (l *Logger) Errorf(format string, n ...interface{}) {
 	l.logf(ERROR, format, n...)
 }
 
-func (l *Logger) logf(level int, s string, n ...interface{}) {
-	if level >= l.LogLevel {
-		l.write(l.logPrefix(level), fmt.Sprintf(s, n...))
-	}
-}
-
 func (l *Logger) Debug(n ...interface{}) {
 	l.log(DEBUG, n...)
 }
@@ -95,6 +91,19 @@ func (l *Logger) Error(n ...interface{}) {
 	l.log(ERROR, n...)
 }
 
+func (l *Logger) logf(level int, s string, n ...interface{}) {
+	if level >= l.LogLevel {
+		l.write(l.logPrefix(level), fmt.Sprintf(s, n...))
+	}
+}
+
+func (l *Logger) log(level int, n ...interface{}) {
+	if level >= l.LogLevel {
+		all := append([]interface{}{l.logPrefix(level)}, n...)
+		l.write(all...)
+	}
+}
+
 func (l *Logger) logPrefix(i int) (s string) {
 	s = time.Now().Format(TIME_FORMAT)
 	if l.Started.Unix() > 0 {
@@ -105,7 +114,13 @@ func (l *Logger) logPrefix(i int) (s string) {
 		s = s + " [" + l.Prefix + "]"
 	}
 	s = s + " " + l.LogLevelPrefix(i)
-	return
+	if l.Caller {
+		_, file, line, ok := runtime.Caller(3)
+		if ok {
+			s += fmt.Sprintf(" [%s:%d]", file, line)
+		}
+	}
+	return s
 }
 
 func (l *Logger) LogLevelPrefix(level int) (s string) {
@@ -115,13 +130,6 @@ func (l *Logger) LogLevelPrefix(level int) (s string) {
 		return colorize(color, prefix)
 	}
 	return prefix
-}
-
-func (l *Logger) log(level int, n ...interface{}) {
-	if level >= l.LogLevel {
-		all := append([]interface{}{l.logPrefix(level)}, n...)
-		l.write(all...)
-	}
 }
 
 func (self *Logger) write(n ...interface{}) {
