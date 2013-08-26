@@ -1,4 +1,4 @@
-default: install
+default: test install
 
 install:
 	go install github.com/dynport/gologger
