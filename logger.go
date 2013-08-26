@@ -3,6 +3,7 @@ package gologger
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 )
@@ -117,7 +118,7 @@ func (l *Logger) logPrefix(i int) (s string) {
 	if l.Caller {
 		_, file, line, ok := runtime.Caller(3)
 		if ok {
-			s += fmt.Sprintf(" [%s:%d]", file, line)
+			s += fmt.Sprintf(" [%s:%d]", filepath.Base(file), line)
 		}
 	}
 	return s
