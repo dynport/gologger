@@ -42,6 +42,23 @@ type Logger struct {
 	Caller   bool
 }
 
+func (logger *Logger) deferBenchmark() func() {
+	logger.Start()
+	return func() { logger.Stop() }
+}
+
+func (logger *Logger) deferRestoreLogLevel(level int) func() {
+	oldLevel := logger.LogLevel
+	logger.LogLevel = level
+	return func() { logger.LogLevel = oldLevel }
+}
+
+func (logger *Logger) deferRestoreLogPrefix(newPrefix string) func() {
+	oldPrefix := logger.Prefix
+	logger.Prefix = newPrefix
+	return func() { logger.Prefix = oldPrefix }
+}
+
 func New() *Logger {
 	return &Logger{Colored: true, LogLevel: INFO}
 }
