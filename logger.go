@@ -16,19 +16,21 @@ const (
 	ERROR
 )
 
-var LogColors = map[int]int{
-	DEBUG: 102,
-	INFO:  28,
-	WARN:  214,
-	ERROR: 196,
-}
-
-var LogPrefixes = map[int]string{
-	DEBUG: "DEBUG",
-	INFO:  "INFO ",
-	WARN:  "WARN ",
-	ERROR: "ERROR",
-}
+var (
+	LogColors = map[int]int{
+		DEBUG: 102,
+		INFO:  28,
+		WARN:  214,
+		ERROR: 196,
+	}
+	LogPrefixes = map[int]string{
+		DEBUG: "DEBUG",
+		INFO:  "INFO ",
+		WARN:  "WARN ",
+		ERROR: "ERROR",
+	}
+	logger *Logger
+)
 
 func colorize(c int, s string) (r string) {
 	return fmt.Sprintf("\033[38;5;%dm%s\033[0m", c, s)
@@ -42,9 +44,32 @@ type Logger struct {
 	Caller   bool
 }
 
+func currentLogger() *Logger {
+	if logger == nil {
+		logger = New()
+		if os.Getenv("DEBUG") == "true" {
+			logger.Caller = true
+			logger.LogLevel = DEBUG
+		}
+	}
+	return logger
+}
+
+func New() *Logger {
+	return &Logger{Colored: true, LogLevel: INFO}
+}
+
+func DeferBenchmark() func() {
+	return currentLogger().DeferBenchmark()
+}
+
 func (logger *Logger) DeferBenchmark() func() {
 	logger.Start()
 	return func() { logger.Stop() }
+}
+
+func DeferRestoreLogLevel(level int) func() {
+	return currentLogger().DeferRestoreLogLevel(level)
 }
 
 func (logger *Logger) DeferRestoreLogLevel(level int) func() {
@@ -53,56 +78,98 @@ func (logger *Logger) DeferRestoreLogLevel(level int) func() {
 	return func() { logger.LogLevel = oldLevel }
 }
 
+func DeferRestoreLogPrefix(newPrefix string) func() {
+	return currentLogger().DeferRestoreLogPrefix(newPrefix)
+}
+
 func (logger *Logger) DeferRestoreLogPrefix(newPrefix string) func() {
 	oldPrefix := logger.Prefix
 	logger.Prefix = newPrefix
 	return func() { logger.Prefix = oldPrefix }
 }
 
-func New() *Logger {
-	return &Logger{Colored: true, LogLevel: INFO}
+func Start() {
+	currentLogger().Start()
 }
 
-// starts a timer, current runtime is then added to log output
 func (self *Logger) Start() {
 	self.Started = time.Now()
 }
 
-// stops the timer
+func Stop() {
+	currentLogger().Stop()
+}
+
 func (self *Logger) Stop() {
 	self.Started = time.Unix(0, 0)
+}
+
+func Inspect(i interface{}) {
+	currentLogger().Info(i)
 }
 
 func (self *Logger) Inspect(i interface{}) {
 	self.Debugf("%+v", i)
 }
 
+func Debugf(format string, n ...interface{}) {
+	currentLogger().Debugf(format, n...)
+}
+
 func (l *Logger) Debugf(format string, n ...interface{}) {
 	l.logf(DEBUG, format, n...)
+}
+
+func Infof(format string, n ...interface{}) {
+	currentLogger().Infof(format, n...)
 }
 
 func (l *Logger) Infof(format string, n ...interface{}) {
 	l.logf(INFO, format, n...)
 }
 
+func Warnf(format string, n ...interface{}) {
+	currentLogger().Warnf(format, n...)
+}
+
 func (l *Logger) Warnf(format string, n ...interface{}) {
 	l.logf(WARN, format, n...)
+}
+
+func Errorf(format string, n ...interface{}) {
+	currentLogger().Errorf(format, n...)
 }
 
 func (l *Logger) Errorf(format string, n ...interface{}) {
 	l.logf(ERROR, format, n...)
 }
 
+func Debug(n ...interface{}) {
+	currentLogger().Debug(n...)
+}
+
 func (l *Logger) Debug(n ...interface{}) {
 	l.log(DEBUG, n...)
+}
+
+func Info(n ...interface{}) {
+	currentLogger().Info(n...)
 }
 
 func (l *Logger) Info(n ...interface{}) {
 	l.log(INFO, n...)
 }
 
+func Warn(n ...interface{}) {
+	currentLogger().Warn(n...)
+}
+
 func (l *Logger) Warn(n ...interface{}) {
 	l.log(WARN, n...)
+}
+
+func Error(n ...interface{}) {
+	currentLogger().Error(n...)
 }
 
 func (l *Logger) Error(n ...interface{}) {
