@@ -59,6 +59,15 @@ func New() *Logger {
 	return &Logger{Colored: true, LogLevel: INFO}
 }
 
+func NewFromEnv() *Logger {
+	logger = New()
+	if os.Getenv("DEBUG") == "true" {
+		logger.Caller = true
+		logger.LogLevel = DEBUG
+	}
+	return logger
+}
+
 func DeferBenchmark() func() {
 	return currentLogger().DeferBenchmark()
 }
