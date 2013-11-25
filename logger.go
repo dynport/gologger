@@ -253,3 +253,10 @@ func (l *Logger) LogLevelPrefix(level int) (s string) {
 func (self *Logger) write(n ...interface{}) {
 	fmt.Fprintln(os.Stderr, n...)
 }
+
+func (logger *Logger) Write(p []byte) (n int, e error) {
+	q := p
+	n = len(q)
+	logger.Infof(string(q))
+	return n, e
+}
