@@ -40,6 +40,7 @@ type Logger struct {
 	LogLevel int
 	Started  time.Time
 	Prefix   string
+	prefixes []string
 	Colored  bool
 	Caller   bool
 }
@@ -198,20 +199,43 @@ func (l *Logger) log(level int, n ...interface{}) {
 	}
 }
 
+func (l *Logger) PushPrefix(prefix string) {
+	l.prefixes = append(l.prefixes, prefix)
+}
+
+func (l *Logger) PopPrefix() string {
+	popped := ""
+	pLen := len(l.prefixes)
+	if pLen > 0 {
+		popped = l.prefixes[pLen-1]
+		l.prefixes = l.prefixes[:pLen-1]
+	}
+	return popped
+}
+
 func (l *Logger) logPrefix(i int) (s string) {
 	s = time.Now().Format(TIME_FORMAT)
 	if l.Started.Unix() > 0 {
 		time := fmt.Sprintf("%.3f", time.Now().Sub(l.Started).Seconds())
 		s += fmt.Sprintf(" [%8s]", time)
 	}
+	s = s + " " + l.LogLevelPrefix(i) + " "
 	if l.Prefix != "" {
-		s = s + " [" + l.Prefix + "]"
+		s = s + "[" + l.Prefix + "]"
+		if len(l.prefixes) == 0 {
+			s += " "
+		}
 	}
-	s = s + " " + l.LogLevelPrefix(i)
+	if len(l.prefixes) > 0 {
+		for i := range l.prefixes {
+			s = s + "[" + l.prefixes[i] + "]"
+		}
+		s += " "
+	}
 	if l.Caller {
 		_, file, line, ok := runtime.Caller(3)
 		if ok {
-			s += fmt.Sprintf(" [%s:%d]", filepath.Base(file), line)
+			s += fmt.Sprintf("[%s:%d] ", filepath.Base(file), line)
 		}
 	}
 	return s

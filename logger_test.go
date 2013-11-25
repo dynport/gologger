@@ -31,3 +31,23 @@ func TestLoggingWithTiming(t *testing.T) {
 	prefix = logger.logPrefix(DEBUG)
 	assert.NotContains(t, prefix, " [")
 }
+
+func TestLoggingWithPrefixStack(t *testing.T) {
+	logger := New()
+
+	logger.PushPrefix("foo")
+	v := logger.logPrefix(DEBUG)
+	assert.Contains(t, v, "[foo]")
+
+	logger.PushPrefix("bar")
+	v = logger.logPrefix(DEBUG)
+	assert.Contains(t, v, "[foo]")
+	assert.Contains(t, v, "[bar]")
+	assert.Equal(t, logger.PopPrefix(), "bar")
+
+	assert.Equal(t, logger.PopPrefix(), "foo")
+
+	v = logger.logPrefix(DEBUG)
+	assert.NotContains(t, v, "[foo]")
+	assert.NotContains(t, v, "[bar]")
+}
