@@ -32,7 +32,7 @@ var (
 	logger *Logger
 )
 
-func colorize(c int, s string) (r string) {
+func Colorize(c int, s string) (r string) {
 	return fmt.Sprintf("\033[38;5;%dm%s\033[0m", c, s)
 }
 
@@ -221,7 +221,7 @@ func (l *Logger) LogLevelPrefix(level int) (s string) {
 	prefix := LogPrefixes[level]
 	if l.Colored {
 		color := LogColors[level]
-		return colorize(color, prefix)
+		return Colorize(color, prefix)
 	}
 	return prefix
 }
